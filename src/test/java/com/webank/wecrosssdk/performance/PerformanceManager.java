@@ -38,8 +38,8 @@ public class PerformanceManager {
         this.qps = qps;
 
         this.threadPool = new ThreadPoolTaskExecutor();
-        this.threadPool.setCorePoolSize(200);
-        this.threadPool.setMaxPoolSize(500);
+        this.threadPool.setCorePoolSize(2000);
+        this.threadPool.setMaxPoolSize(2000);
         this.threadPool.setQueueCapacity(count.intValue());
         this.threadPool.initialize();
 

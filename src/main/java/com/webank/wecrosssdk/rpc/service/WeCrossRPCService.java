@@ -18,10 +18,14 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -182,7 +186,21 @@ public class WeCrossRPCService implements WeCrossService {
 
             SSLConnectionSocketFactory csf =
                     new SSLConnectionSocketFactory(context, NoopHostnameVerifier.INSTANCE);
-            CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(csf).build();
+
+            Registry<ConnectionSocketFactory> socketFactoryRegistry =
+                    RegistryBuilder.<ConnectionSocketFactory>create()
+                            .register("https", csf)
+                            .build();
+            PoolingHttpClientConnectionManager poolingHttpClientConnectionManager =
+                    new PoolingHttpClientConnectionManager(socketFactoryRegistry);
+            poolingHttpClientConnectionManager.setMaxTotal(2000);
+            poolingHttpClientConnectionManager.setDefaultMaxPerRoute(2000);
+            CloseableHttpClient httpClient =
+                    HttpClients.custom()
+                            .setConnectionManager(poolingHttpClientConnectionManager)
+                            .build();
+            // CloseableHttpClient httpClient =
+            // HttpClients.custom().setSSLSocketFactory(csf).build();
             HttpComponentsClientHttpRequestFactory requestFactory =
                     new HttpComponentsClientHttpRequestFactory();
             requestFactory.setHttpClient(httpClient);
